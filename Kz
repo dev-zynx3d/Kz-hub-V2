@@ -5,318 +5,430 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
--- [[ CONFIGURAÇÕES DO TWEEN (ANIMAÇÃO) ]]
-local TWEEN_INFO = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+-- Define onde as UIs vão ficar (esconde do jogador comum)
+local CoreGui = gethui and gethui() or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
 
--- [[ ESTADOS DAS CONFIGURAÇÕES ]]
-local Configs = {
-	SpeedAtivo = false,
-	RangeAtivo = false,
-	Velocidade = 45,
-	RangeDistancia = 250
-}
+-- ==========================================
+-- 1. TELA DE INTRODUÇÃO (SPLASH SCREEN)
+-- ==========================================
+local IntroGui = Instance.new("ScreenGui")
+IntroGui.Name = "IntroScreen"
+IntroGui.ResetOnSpawn = false
+IntroGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+if syn and syn.protect_gui then syn.protect_gui(IntroGui) end
+IntroGui.Parent = CoreGui
 
--- [[ CRIAÇÃO DA INTERFACE MODERNA (UI) ]]
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DeltaModMenuAnimado"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+-- Fundo Preto
+local Background = Instance.new("Frame")
+Background.Size = UDim2.new(1, 0, 1, 0)
+Background.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Background.BackgroundTransparency = 1
+Background.BorderSizePixel = 0
+Background.Parent = IntroGui
 
-if syn and syn.protect_gui then syn.protect_gui(ScreenGui) end
-ScreenGui.Parent = gethui and gethui() or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+-- Texto KZ (Estilo Grafite)
+local KZText = Instance.new("TextLabel")
+KZText.Size = UDim2.new(1, 0, 1, 0)
+KZText.BackgroundTransparency = 1
+KZText.Text = "KZ"
+KZText.TextColor3 = Color3.fromRGB(0, 150, 255) -- Azul
+KZText.TextTransparency = 1
+KZText.Font = Enum.Font.Bangers -- Fonte mais grossa/estilo grafite
+KZText.TextSize = 150
+KZText.Parent = Background
 
--- Frame Principal (Aumentei a altura para 340 para caber os novos botões)
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 260, 0, 340)
-local PosicaoFinal = UDim2.new(0.5, -130, 0.35, -170)
-MainFrame.Position = UDim2.new(0.5, -130, 0.6, -170)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-MainFrame.BorderSizePixel = 0
-MainFrame.ClipsDescendants = true
-MainFrame.BackgroundTransparency = 1 
-MainFrame.Parent = ScreenGui
+-- Borda para dar efeito de tinta/grafite
+local KZStroke = Instance.new("UIStroke")
+KZStroke.Thickness = 5
+KZStroke.Color = Color3.fromRGB(255, 255, 255)
+KZStroke.Transparency = 1
+KZStroke.Parent = KZText
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = MainFrame
-
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Thickness = 1.5
-UIStroke.Color = Color3.fromRGB(0, 180, 216)
-UIStroke.Transparency = 1
-UIStroke.Parent = MainFrame
-
--- Título do Menu
-local Title = Instance.new("TextLabel")
-Title.Name = "Title"
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundTransparency = 1
-Title.Text = "DELTA HUB ◆ PRO"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextTransparency = 1
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 14
-Title.Parent = MainFrame
-
--- Botão de Fechar
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 30, 0, 30)
-CloseBtn.Position = UDim2.new(1, -35, 0, 5)
-CloseBtn.BackgroundTransparency = 1
-CloseBtn.Text = "✕"
-CloseBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
-CloseBtn.TextTransparency = 1
-CloseBtn.TextSize = 14
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.Parent = MainFrame
-
-CloseBtn.MouseButton1Click:Connect(function()
-	TweenService:Create(MainFrame, TWEEN_INFO, {Position = UDim2.new(0.5, -130, 0.6, -170), BackgroundTransparency = 1}):Play()
-	TweenService:Create(UIStroke, TWEEN_INFO, {Transparency = 1}):Play()
-	task.wait(0.3)
-	ScreenGui:Destroy()
+-- Animação de Entrada do KZ
+task.spawn(function()
+	TweenService:Create(Background, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
+	TweenService:Create(KZText, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0, TextSize = 180}):Play()
+	TweenService:Create(KZStroke, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 0}):Play()
 end)
 
--- Container dos Itens
-local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, 0, 1, -50)
-Container.Position = UDim2.new(0, 0, 0, 45)
-Container.BackgroundTransparency = 1
-Container.Parent = MainFrame
+-- Espera 3 Segundos e depois passa para a pergunta
+task.wait(3)
 
-local ContainerLayout = Instance.new("UIListLayout")
-ContainerLayout.Padding = UDim.new(0, 10)
-ContainerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-ContainerLayout.Parent = Container
+-- Animação de Saída do KZ
+TweenService:Create(KZText, TweenInfo.new(0.5), {TextTransparency = 1, TextSize = 100}):Play()
+TweenService:Create(KZStroke, TweenInfo.new(0.5), {Transparency = 1}):Play()
+task.wait(0.5)
 
--- FUNÇÃO PARA CRIAR BOTÕES
-local function CriarToggle(texto, callback)
-	local Button = Instance.new("TextButton")
-	Button.Size = UDim2.new(0, 220, 0, 40)
-	Button.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-	Button.Text = texto .. " [DESATIVADO]"
-	Button.TextColor3 = Color3.fromRGB(200, 200, 200)
-	Button.TextTransparency = 1
-	Button.Font = Enum.Font.GothamSemibold
-	Button.TextSize = 13
-	Button.BorderSizePixel = 0
-	Button.Parent = Container
+-- ==========================================
+-- 2. MENU DE CONFIRMAÇÃO (SIM OU NÃO)
+-- ==========================================
+KZText:Destroy() -- Remove o KZ para dar lugar a pergunta
 
-	local BtnCorner = Instance.new("UICorner")
-	BtnCorner.CornerRadius = UDim.new(0, 8)
-	BtnCorner.Parent = Button
+local PromptFrame = Instance.new("Frame")
+PromptFrame.Size = UDim2.new(0, 250, 0, 120)
+PromptFrame.Position = UDim2.new(0.5, -125, 0.5, -60)
+PromptFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+PromptFrame.BorderSizePixel = 0
+PromptFrame.Parent = Background
 
-	local BtnStroke = Instance.new("UIStroke")
-	BtnStroke.Thickness = 1
-	BtnStroke.Color = Color3.fromRGB(50, 50, 60)
-	BtnStroke.Transparency = 1
-	BtnStroke.Parent = Button
+local PromptCorner = Instance.new("UICorner")
+PromptCorner.CornerRadius = UDim.new(0, 10)
+PromptCorner.Parent = PromptFrame
 
-	local ativo = false
-	Button.MouseButton1Click:Connect(function()
-		ativo = not ativo
-		local CorFundo = ativo and Color3.fromRGB(0, 180, 216) or Color3.fromRGB(30, 30, 38)
-		local CorTexto = ativo and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
-		local CorBorda = ativo and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(50, 50, 60)
-		local TextoMudanca = ativo and texto .. " [ATIVADO]" or texto .. " [DESATIVADO]"
+local PromptStroke = Instance.new("UIStroke")
+PromptStroke.Thickness = 2
+PromptStroke.Color = Color3.fromRGB(0, 150, 255)
+PromptStroke.Parent = PromptFrame
 
-		TweenService:Create(Button, TWEEN_INFO, {BackgroundColor3 = CorFundo, TextColor3 = CorTexto}):Play()
-		TweenService:Create(BtnStroke, TWEEN_INFO, {Color = CorBorda}):Play()
-		Button.Text = TextoMudanca
-		
-		callback(ativo)
+local QuestionText = Instance.new("TextLabel")
+QuestionText.Size = UDim2.new(1, 0, 0, 50)
+QuestionText.BackgroundTransparency = 1
+QuestionText.Text = "Deseja executar?"
+QuestionText.TextColor3 = Color3.fromRGB(255, 255, 255)
+QuestionText.Font = Enum.Font.GothamBold
+QuestionText.TextSize = 18
+QuestionText.Parent = PromptFrame
+
+-- Botão SIM (Verde)
+local YesBtn = Instance.new("TextButton")
+YesBtn.Size = UDim2.new(0.4, 0, 0, 35)
+YesBtn.Position = UDim2.new(0.05, 0, 0, 65)
+YesBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 80)
+YesBtn.Text = "SIM"
+YesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+YesBtn.Font = Enum.Font.GothamBold
+YesBtn.TextSize = 14
+YesBtn.BorderSizePixel = 0
+YesBtn.Parent = PromptFrame
+
+local YesCorner = Instance.new("UICorner")
+YesCorner.CornerRadius = UDim.new(0, 6)
+YesCorner.Parent = YesBtn
+
+-- Botão NÃO (Vermelho)
+local NoBtn = Instance.new("TextButton")
+NoBtn.Size = UDim2.new(0.4, 0, 0, 35)
+NoBtn.Position = UDim2.new(0.55, 0, 0, 65)
+NoBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+NoBtn.Text = "NÃO"
+NoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoBtn.Font = Enum.Font.GothamBold
+NoBtn.TextSize = 14
+NoBtn.BorderSizePixel = 0
+NoBtn.Parent = PromptFrame
+
+local NoCorner = Instance.new("UICorner")
+NoCorner.CornerRadius = UDim.new(0, 6)
+NoCorner.Parent = NoBtn
+
+-- ==========================================
+-- 3. LÓGICA DO MENU PRINCIPAL
+-- ==========================================
+local function AbrirMenuPrincipal()
+	-- [[ CONFIGURAÇÕES DO TWEEN ]]
+	local TWEEN_INFO = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+	-- [[ ESTADOS DAS CONFIGURAÇÕES ]]
+	local Configs = {
+		SpeedAtivo = false,
+		RangeAtivo = false,
+		Velocidade = 45,
+		RangeDistancia = 250
+	}
+
+	-- Criação da UI Principal
+	local ScreenGui = Instance.new("ScreenGui")
+	ScreenGui.Name = "DeltaModMenuAnimado"
+	ScreenGui.ResetOnSpawn = false
+	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	if syn and syn.protect_gui then syn.protect_gui(ScreenGui) end
+	ScreenGui.Parent = CoreGui
+
+	local MainFrame = Instance.new("Frame")
+	MainFrame.Name = "MainFrame"
+	MainFrame.Size = UDim2.new(0, 260, 0, 340)
+	local PosicaoFinal = UDim2.new(0.5, -130, 0.35, -170)
+	MainFrame.Position = UDim2.new(0.5, -130, 0.6, -170)
+	MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+	MainFrame.BorderSizePixel = 0
+	MainFrame.ClipsDescendants = true
+	MainFrame.BackgroundTransparency = 1 
+	MainFrame.Parent = ScreenGui
+
+	local UICorner = Instance.new("UICorner")
+	UICorner.CornerRadius = UDim.new(0, 12)
+	UICorner.Parent = MainFrame
+
+	local UIStroke = Instance.new("UIStroke")
+	UIStroke.Thickness = 1.5
+	UIStroke.Color = Color3.fromRGB(0, 180, 216)
+	UIStroke.Transparency = 1
+	UIStroke.Parent = MainFrame
+
+	local Title = Instance.new("TextLabel")
+	Title.Name = "Title"
+	Title.Size = UDim2.new(1, 0, 0, 40)
+	Title.BackgroundTransparency = 1
+	Title.Text = "DELTA HUB ◆ PRO"
+	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Title.TextTransparency = 1
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 14
+	Title.Parent = MainFrame
+
+	local CloseBtn = Instance.new("TextButton")
+	CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+	CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+	CloseBtn.BackgroundTransparency = 1
+	CloseBtn.Text = "✕"
+	CloseBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+	CloseBtn.TextTransparency = 1
+	CloseBtn.TextSize = 14
+	CloseBtn.Font = Enum.Font.GothamBold
+	CloseBtn.Parent = MainFrame
+
+	CloseBtn.MouseButton1Click:Connect(function()
+		TweenService:Create(MainFrame, TWEEN_INFO, {Position = UDim2.new(0.5, -130, 0.6, -170), BackgroundTransparency = 1}):Play()
+		TweenService:Create(UIStroke, TWEEN_INFO, {Transparency = 1}):Play()
+		task.wait(0.3)
+		ScreenGui:Destroy()
 	end)
 
-	return Button, BtnStroke
-end
+	local Container = Instance.new("Frame")
+	Container.Size = UDim2.new(1, 0, 1, -50)
+	Container.Position = UDim2.new(0, 0, 0, 45)
+	Container.BackgroundTransparency = 1
+	Container.Parent = MainFrame
 
--- Variáveis globais
-local BotaoSpeed, BordaSpeed
-local BotaoRange, BordaRange
+	local ContainerLayout = Instance.new("UIListLayout")
+	ContainerLayout.Padding = UDim.new(0, 10)
+	ContainerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	ContainerLayout.Parent = Container
 
--- Função para aplicar a velocidade
-local function AplicarVelocidade()
-	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-		if Configs.SpeedAtivo then
-			LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = Configs.Velocidade
-		else
-			LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
-		end
+	local function CriarToggle(texto, callback)
+		local Button = Instance.new("TextButton")
+		Button.Size = UDim2.new(0, 220, 0, 40)
+		Button.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+		Button.Text = texto .. " [DESATIVADO]"
+		Button.TextColor3 = Color3.fromRGB(200, 200, 200)
+		Button.TextTransparency = 1
+		Button.Font = Enum.Font.GothamSemibold
+		Button.TextSize = 13
+		Button.BorderSizePixel = 0
+		Button.Parent = Container
+
+		local BtnCorner = Instance.new("UICorner")
+		BtnCorner.CornerRadius = UDim.new(0, 8)
+		BtnCorner.Parent = Button
+
+		local BtnStroke = Instance.new("UIStroke")
+		BtnStroke.Thickness = 1
+		BtnStroke.Color = Color3.fromRGB(50, 50, 60)
+		BtnStroke.Transparency = 1
+		BtnStroke.Parent = Button
+
+		local ativo = false
+		Button.MouseButton1Click:Connect(function()
+			ativo = not ativo
+			local CorFundo = ativo and Color3.fromRGB(0, 180, 216) or Color3.fromRGB(30, 30, 38)
+			local CorTexto = ativo and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
+			local CorBorda = ativo and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(50, 50, 60)
+			local TextoMudanca = ativo and texto .. " [ATIVADO]" or texto .. " [DESATIVADO]"
+
+			TweenService:Create(Button, TWEEN_INFO, {BackgroundColor3 = CorFundo, TextColor3 = CorTexto}):Play()
+			TweenService:Create(BtnStroke, TWEEN_INFO, {Color = CorBorda}):Play()
+			Button.Text = TextoMudanca
+			
+			callback(ativo)
+		end)
+
+		return Button, BtnStroke
 	end
-end
 
--- Função para aplicar o Range
-local function AplicarRange()
-	if not Configs.RangeAtivo then return end
-	
-	task.spawn(function()
-		for _, obj in ipairs(workspace:GetDescendants()) do
-			if obj:IsA("ClickDetector") then
-				obj.MaxActivationDistance = Configs.RangeDistancia
+	local BotaoSpeed, BordaSpeed
+	local BotaoRange, BordaRange
+
+	local function AplicarVelocidade()
+		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+			if Configs.SpeedAtivo then
+				LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = Configs.Velocidade
+			else
+				LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
 			end
 		end
-	end)
-end
-
--- Criar os Toggles de Ativação
-BotaoSpeed, BordaSpeed = CriarToggle("Super Velocidade", function(estado) 
-	Configs.SpeedAtivo = estado 
-	AplicarVelocidade()
-end)
-
-BotaoRange, BordaRange = CriarToggle("Aumento de Range", function(estado) 
-	Configs.RangeAtivo = estado 
-	if estado then AplicarRange() end
-end)
-
--- ==========================================
--- NOVA ÁREA DE CONFIGURAÇÃO (SPEED E RANGE)
--- ==========================================
-
--- Caixa de Texto da Velocidade
-local SpeedBox = Instance.new("TextBox")
-SpeedBox.Size = UDim2.new(0, 220, 0, 35)
-SpeedBox.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-SpeedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpeedBox.PlaceholderText = "Digite a Velocidade (ex: 45)"
-SpeedBox.Text = ""
-SpeedBox.Font = Enum.Font.GothamSemibold
-SpeedBox.TextSize = 12
-SpeedBox.BorderSizePixel = 0
-SpeedBox.TextTransparency = 1
-SpeedBox.Parent = Container
-
-local SpeedBoxCorner = Instance.new("UICorner")
-SpeedBoxCorner.CornerRadius = UDim.new(0, 8)
-SpeedBoxCorner.Parent = SpeedBox
-
-local SpeedBoxStroke = Instance.new("UIStroke")
-SpeedBoxStroke.Thickness = 1
-SpeedBoxStroke.Color = Color3.fromRGB(50, 50, 60)
-SpeedBoxStroke.Transparency = 1
-SpeedBoxStroke.Parent = SpeedBox
-
--- Caixa de Texto do Range
-local RangeBox = Instance.new("TextBox")
-RangeBox.Size = UDim2.new(0, 220, 0, 35)
-RangeBox.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-RangeBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-RangeBox.PlaceholderText = "Digite o Range (ex: 250)"
-RangeBox.Text = ""
-RangeBox.Font = Enum.Font.GothamSemibold
-RangeBox.TextSize = 12
-RangeBox.BorderSizePixel = 0
-RangeBox.TextTransparency = 1
-RangeBox.Parent = Container
-
-local RangeBoxCorner = Instance.new("UICorner")
-RangeBoxCorner.CornerRadius = UDim.new(0, 8)
-RangeBoxCorner.Parent = RangeBox
-
-local RangeBoxStroke = Instance.new("UIStroke")
-RangeBoxStroke.Thickness = 1
-RangeBoxStroke.Color = Color3.fromRGB(50, 50, 60)
-RangeBoxStroke.Transparency = 1
-RangeBoxStroke.Parent = RangeBox
-
--- Botão de Aplicar Configurações
-local ApplyBtn = Instance.new("TextButton")
-ApplyBtn.Size = UDim2.new(0, 220, 0, 35)
-ApplyBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 216) -- Cor Ciano
-ApplyBtn.Text = "Aplicar Configurações"
-ApplyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ApplyBtn.Font = Enum.Font.GothamBold
-ApplyBtn.TextSize = 12
-ApplyBtn.BorderSizePixel = 0
-ApplyBtn.TextTransparency = 1
-ApplyBtn.Parent = Container
-
-local ApplyCorner = Instance.new("UICorner")
-ApplyCorner.CornerRadius = UDim.new(0, 8)
-ApplyCorner.Parent = ApplyBtn
-
--- Lógica do Botão Aplicar
-ApplyBtn.MouseButton1Click:Connect(function()
-	local NovaVelocidade = tonumber(SpeedBox.Text)
-	local NovoRange = tonumber(RangeBox.Text)
-	
-	if NovaVelocidade and NovaVelocidade > 0 then
-		Configs.Velocidade = NovaVelocidade
 	end
-	
-	if NovoRange and NovoRange > 0 then
-		Configs.RangeDistancia = NovoRange
-	end
-	
-	-- Atualiza na hora se os mods estiverem ligados
-	AplicarVelocidade()
-	AplicarRange()
-	
-	-- Efeito visual para mostrar que salvou
-	ApplyBtn.Text = "Configurações Salvas! ✓"
-	task.wait(1)
-	ApplyBtn.Text = "Aplicar Configurações"
-end)
 
--- ==========================================
-
--- Monitorar quando o personagem nascer/respawnar
-LocalPlayer.CharacterAdded:Connect(function(character)
-	task.wait(1)
-	AplicarVelocidade()
-	if Configs.RangeAtivo then AplicarRange() end
-end)
-
--- [[ ANIMAÇÃO DE ENTRADA DO MENU ]]
-task.spawn(function()
-	TweenService:Create(MainFrame, TWEEN_INFO, {Position = PosicaoFinal, BackgroundTransparency = 0}):Play()
-	TweenService:Create(UIStroke, TWEEN_INFO, {Transparency = 0}):Play()
-	TweenService:Create(Title, TWEEN_INFO, {TextTransparency = 0}):Play()
-	TweenService:Create(CloseBtn, TWEEN_INFO, {TextTransparency = 0}):Play()
-	
-	TweenService:Create(BotaoSpeed, TWEEN_INFO, {TextTransparency = 0}):Play()
-	TweenService:Create(BordaSpeed, TWEEN_INFO, {Transparency = 0}):Play()
-	TweenService:Create(BotaoRange, TWEEN_INFO, {TextTransparency = 0}):Play()
-	TweenService:Create(BordaRange, TWEEN_INFO, {Transparency = 0}):Play()
-	
-	-- Animação dos novos botões
-	TweenService:Create(SpeedBox, TWEEN_INFO, {TextTransparency = 0}):Play()
-	TweenService:Create(SpeedBoxStroke, TWEEN_INFO, {Transparency = 0}):Play()
-	TweenService:Create(RangeBox, TWEEN_INFO, {TextTransparency = 0}):Play()
-	TweenService:Create(RangeBoxStroke, TWEEN_INFO, {Transparency = 0}):Play()
-	TweenService:Create(ApplyBtn, TWEEN_INFO, {TextTransparency = 0}):Play()
-end)
-
--- [[ LÓGICA PARA ARRASTAR ]]
-local dragging, dragInput, dragStart, startPos
-local function update(input)
-	local delta = input.Position - dragStart
-	MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
-
-MainFrame.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = MainFrame.Position
-		
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then 
-				dragging = false 
+	local function AplicarRange()
+		if not Configs.RangeAtivo then return end
+		task.spawn(function()
+			for _, obj in ipairs(workspace:GetDescendants()) do
+				if obj:IsA("ClickDetector") then
+					obj.MaxActivationDistance = Configs.RangeDistancia
+				end
 			end
 		end)
 	end
-end)
 
-MainFrame.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then 
-		dragInput = input 
+	BotaoSpeed, BordaSpeed = CriarToggle("Super Velocidade", function(estado) 
+		Configs.SpeedAtivo = estado 
+		AplicarVelocidade()
+	end)
+
+	BotaoRange, BordaRange = CriarToggle("Aumento de Range", function(estado) 
+		Configs.RangeAtivo = estado 
+		if estado then AplicarRange() end
+	end)
+
+	-- Caixa de Texto da Velocidade
+	local SpeedBox = Instance.new("TextBox")
+	SpeedBox.Size = UDim2.new(0, 220, 0, 35)
+	SpeedBox.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+	SpeedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	SpeedBox.PlaceholderText = "Digite a Velocidade (ex: 45)"
+	SpeedBox.Text = ""
+	SpeedBox.Font = Enum.Font.GothamSemibold
+	SpeedBox.TextSize = 12
+	SpeedBox.BorderSizePixel = 0
+	SpeedBox.TextTransparency = 1
+	SpeedBox.Parent = Container
+
+	local SpeedBoxCorner = Instance.new("UICorner")
+	SpeedBoxCorner.CornerRadius = UDim.new(0, 8)
+	SpeedBoxCorner.Parent = SpeedBox
+
+	local SpeedBoxStroke = Instance.new("UIStroke")
+	SpeedBoxStroke.Thickness = 1
+	SpeedBoxStroke.Color = Color3.fromRGB(50, 50, 60)
+	SpeedBoxStroke.Transparency = 1
+	SpeedBoxStroke.Parent = SpeedBox
+
+	-- Caixa de Texto do Range
+	local RangeBox = Instance.new("TextBox")
+	RangeBox.Size = UDim2.new(0, 220, 0, 35)
+	RangeBox.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+	RangeBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	RangeBox.PlaceholderText = "Digite o Range (ex: 250)"
+	RangeBox.Text = ""
+	RangeBox.Font = Enum.Font.GothamSemibold
+	RangeBox.TextSize = 12
+	RangeBox.BorderSizePixel = 0
+	RangeBox.TextTransparency = 1
+	RangeBox.Parent = Container
+
+	local RangeBoxCorner = Instance.new("UICorner")
+	RangeBoxCorner.CornerRadius = UDim.new(0, 8)
+	RangeBoxCorner.Parent = RangeBox
+
+	local RangeBoxStroke = Instance.new("UIStroke")
+	RangeBoxStroke.Thickness = 1
+	RangeBoxStroke.Color = Color3.fromRGB(50, 50, 60)
+	RangeBoxStroke.Transparency = 1
+	RangeBoxStroke.Parent = RangeBox
+
+	-- Botão de Aplicar
+	local ApplyBtn = Instance.new("TextButton")
+	ApplyBtn.Size = UDim2.new(0, 220, 0, 35)
+	ApplyBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 216)
+	ApplyBtn.Text = "Aplicar Configurações"
+	ApplyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	ApplyBtn.Font = Enum.Font.GothamBold
+	ApplyBtn.TextSize = 12
+	ApplyBtn.BorderSizePixel = 0
+	ApplyBtn.TextTransparency = 1
+	ApplyBtn.Parent = Container
+
+	local ApplyCorner = Instance.new("UICorner")
+	ApplyCorner.CornerRadius = UDim.new(0, 8)
+	ApplyCorner.Parent = ApplyBtn
+
+	ApplyBtn.MouseButton1Click:Connect(function()
+		local NovaVelocidade = tonumber(SpeedBox.Text)
+		local NovoRange = tonumber(RangeBox.Text)
+		
+		if NovaVelocidade and NovaVelocidade > 0 then
+			Configs.Velocidade = NovaVelocidade
+		end
+		
+		if NovoRange and NovoRange > 0 then
+			Configs.RangeDistancia = NovoRange
+		end
+		
+		AplicarVelocidade()
+		AplicarRange()
+		
+		ApplyBtn.Text = "Configurações Salvas! ✓"
+		task.wait(1)
+		ApplyBtn.Text = "Aplicar Configurações"
+	end)
+
+	LocalPlayer.CharacterAdded:Connect(function(character)
+		task.wait(1)
+		AplicarVelocidade()
+		if Configs.RangeAtivo then AplicarRange() end
+	end)
+
+	-- Animação de entrada do Menu Principal
+	task.spawn(function()
+		TweenService:Create(MainFrame, TWEEN_INFO, {Position = PosicaoFinal, BackgroundTransparency = 0}):Play()
+		TweenService:Create(UIStroke, TWEEN_INFO, {Transparency = 0}):Play()
+		TweenService:Create(Title, TWEEN_INFO, {TextTransparency = 0}):Play()
+		TweenService:Create(CloseBtn, TWEEN_INFO, {TextTransparency = 0}):Play()
+		
+		TweenService:Create(BotaoSpeed, TWEEN_INFO, {TextTransparency = 0}):Play()
+		TweenService:Create(BordaSpeed, TWEEN_INFO, {Transparency = 0}):Play()
+		TweenService:Create(BotaoRange, TWEEN_INFO, {TextTransparency = 0}):Play()
+		TweenService:Create(BordaRange, TWEEN_INFO, {Transparency = 0}):Play()
+		
+		TweenService:Create(SpeedBox, TWEEN_INFO, {TextTransparency = 0}):Play()
+		TweenService:Create(SpeedBoxStroke, TWEEN_INFO, {Transparency = 0}):Play()
+		TweenService:Create(RangeBox, TWEEN_INFO, {TextTransparency = 0}):Play()
+		TweenService:Create(RangeBoxStroke, TWEEN_INFO, {Transparency = 0}):Play()
+		TweenService:Create(ApplyBtn, TWEEN_INFO, {TextTransparency = 0}):Play()
+	end)
+
+	-- Lógica de Arrastar
+	local dragging, dragInput, dragStart, startPos
+	local function update(input)
+		local delta = input.Position - dragStart
+		MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
+
+	MainFrame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = MainFrame.Position
+			
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+
+	MainFrame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then update(input) end
+	end)
+
+	print("Menu Delta Premium Carregado!")
+end
+
+-- ==========================================
+-- 4. CONECTANDO OS BOTÕES (SIM E NÃO)
+-- ==========================================
+
+-- Se clicar em SIM, destrói a tela de introdução e abre o menu
+YesBtn.MouseButton1Click:Connect(function()
+	YesBtn.Active = false
+	NoBtn.Active = false
+	Background:Destroy() -- Limpa a tela de intro inteira
+	AbrirMenuPrincipal() -- Chama a função que criamos acima
 end)
 
-UserInputService.InputChanged:Connect(function(input)
-	if input == dragInput and dragging then update(input) end
+-- Se clicar em NÃO, destrói a tela de introdução e o script morre aqui
+NoBtn.MouseButton1Click:Connect(function()
+	Background:Destroy()
 end)
-
-print("Menu Delta Premium Carregado com Sistema de Configurações!")
