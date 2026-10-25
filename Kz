@@ -1,0 +1,226 @@
+-- [[ SERVIÇOS DO ROBLOX ]]
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- [[ CONFIGURAÇÕES DO TWEEN (ANIMAÇÃO) ]]
+local TWEEN_INFO = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+-- [[ ESTADOS DAS CONFIGURAÇÕES ]]
+local Configs = {
+    SpeedAtivo = false,
+    RangeAtivo = false,
+    Velocidade = 32,
+    RangeDistancia = 25
+}
+
+-- [[ CRIAÇÃO DA INTERFACE MODERNA (UI) ]]
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DeltaModMenuAnimado"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+if syn and syn.protect_gui then syn.protect_gui(ScreenGui) end
+ScreenGui.Parent = gethui and gethui() or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+
+-- Frame Principal
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 260, 0, 200)
+-- Posição final onde ele vai parar
+local PosicaoFinal = UDim2.new(0.5, -130, 0.4, -100)
+-- Posição inicial (mais abaixo na tela para o efeito de subida)
+MainFrame.Position = UDim2.new(0.5, -130, 0.6, -100)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.BackgroundTransparency = 1 -- Começa invisível para o fade-in
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Thickness = 1.5
+UIStroke.Color = Color3.fromRGB(0, 180, 216) -- Borda Ciano Neon
+UIStroke.Transparency = 1 -- Começa invisível
+UIStroke.Parent = MainFrame
+
+-- Título do Menu
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "DELTA HUB ◆ PRO"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextTransparency = 1 -- Começa invisível
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.Parent = MainFrame
+
+-- Botão de Fechar com Animação
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+CloseBtn.TextTransparency = 1 -- Começa invisível
+CloseBtn.TextSize = 14
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = MainFrame
+
+CloseBtn.MouseButton1Click:Connect(function()
+    -- Animação de saída antes de fechar
+    TweenService:Create(MainFrame, TWEEN_INFO, {Position = UDim2.new(0.5, -130, 0.6, -100), BackgroundTransparency = 1}):Play()
+    TweenService:Create(UIStroke, TWEEN_INFO, {Transparency = 1}):Play()
+    task.wait(0.3)
+    ScreenGui:Destroy()
+end)
+
+-- Container dos Itens
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, 0, 1, -50)
+Container.Position = UDim2.new(0, 0, 0, 45)
+Container.BackgroundTransparency = 1
+Container.Parent = MainFrame
+
+local ContainerLayout = Instance.new("UIListLayout")
+ContainerLayout.Padding = UDim.new(0, 12)
+ContainerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+ContainerLayout.Parent = Container
+
+-- FUNÇÃO PARA CRIAR BOTÕES COM ANIMAÇÃO DE CORES (TWEEN)
+local function CriarToggle(texto, callback)
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(0, 220, 0, 40)
+    Button.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    Button.Text = texto .. " [DESATIVADO]"
+    Button.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Button.TextTransparency = 1 -- Começa invisível
+    Button.Font = Enum.Font.GothamSemibold
+    Button.TextSize = 13
+    Button.BorderSizePixel = 0
+    Button.Parent = Container
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 8)
+    BtnCorner.Parent = Button
+
+    local BtnStroke = Instance.new("UIStroke")
+    BtnStroke.Thickness = 1
+    BtnStroke.Color = Color3.fromRGB(50, 50, 60)
+    BtnStroke.Transparency = 1 -- Começa invisível
+    BtnStroke.Parent = Button
+
+    local ativo = false
+    Button.MouseButton1Click:Connect(function()
+        ativo = not ativo
+        
+        -- Configuração dos alvos da animação (Ativado vs Desativado)
+        local CorFundo = ativo and Color3.fromRGB(0, 180, 216) or Color3.fromRGB(30, 30, 38)
+        local CorTexto = ativo and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
+        local CorBorda = ativo and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(50, 50, 60)
+        local TextoMudanca = ativo and texto .. " [ATIVADO]" or texto .. " [DESATIVADO]"
+
+        -- Executa as transições suaves de cor
+        TweenService:Create(Button, TWEEN_INFO, {BackgroundColor3 = CorFundo, TextColor3 = CorTexto}):Play()
+        TweenService:Create(BtnStroke, TWEEN_INFO, {Color = CorBorda}):Play()
+        Button.Text = TextoMudanca
+        
+        callback(ativo)
+    end)
+
+    -- Retorna os elementos para que possam ser animados na entrada do menu
+    return Button, BtnStroke
+end
+
+-- Criar os Toggles e pegar as referências para animação
+local BotaoSpeed, BordaSpeed = CriarToggle("Super Velocidade", function(estado) Configs.SpeedAtivo = estado end)
+local BotaoRange, BordaRange = CriarToggle("Aumento de Range", function(estado) Configs.RangeAtivo = estado end)
+
+-- [[ ANIMAÇÃO DE ENTRADA DO MENU (SLIDE + FADE IN) ]]
+task.spawn(function()
+    TweenService:Create(MainFrame, TWEEN_INFO, {Position = PosicaoFinal, BackgroundTransparency = 0}):Play()
+    TweenService:Create(UIStroke, TWEEN_INFO, {Transparency = 0}):Play()
+    TweenService:Create(Title, TWEEN_INFO, {TextTransparency = 0}):Play()
+    TweenService:Create(CloseBtn, TWEEN_INFO, {TextTransparency = 0}):Play()
+    
+    -- Fade in suave dos botões internos
+    TweenService:Create(BotaoSpeed, TWEEN_INFO, {TextTransparency = 0}):Play()
+    TweenService:Create(BordaSpeed, TWEEN_INFO, {Transparency = 0}):Play()
+    TweenService:Create(BotaoRange, TWEEN_INFO, {TextTransparency = 0}):Play()
+    TweenService:Create(BordaRange, TWEEN_INFO, {Transparency = 0}):Play()
+end)
+
+-- [[ LÓGICA DE VELOCIDADE E RANGE ]]
+RunService.RenderStepped:Connect(function()
+    if Configs.SpeedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid.WalkSpeed ~= Configs.Velocidade then
+            humanoid.WalkSpeed = Configs.Velocidade
+        end
+    end
+end)
+
+local function AplicarRange(tool)
+    if Configs.RangeAtivo and tool:IsA("Tool") then
+        if tool:FindFirstChild("Handle") then
+            tool.ManualActivationOnly = false
+        end
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    character.ChildAdded:Connect(AplicarRange)
+end)
+
+if LocalPlayer.Character then
+    LocalPlayer.Character.ChildAdded:Connect(AplicarRange)
+end
+
+task.spawn(function()
+    while task.wait(1.5) do
+        if Configs.RangeAtivo then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("ClickDetector") then
+                    obj.MaxActivationDistance = Configs.RangeDistancia
+                end
+            end
+        end
+    end
+end)
+
+-- [[ LÓGICA PARA ARRASTAR (MOBILE/PC) ]]
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    -- Mantém um rastro suave usando Tween ao arrastar o menu
+    TweenService:Create(MainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    }):Play()
+end
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then update(input) end
+end)
+
+print("Menu Delta Premium Animado Carregado!")
